@@ -216,7 +216,7 @@ void MappingGenerator::GeneratePropertyInfo(const PropertyWrapper& Property, std
 {
 	if (!Property.IsUnrealProperty())
 	{
-		std::cout << "\nInvalid non-Unreal property!\n" << std::endl;
+		std::cerr << "\nInvalid non-Unreal property!\n" << std::endl;
 		return;
 	}
 
@@ -293,10 +293,10 @@ void MappingGenerator::GenerateEnum(const EnumWrapper& Enum, std::stringstream& 
 	for (EnumCollisionInfo Member : Enum.GetMembers())
 	{
 		const int32 EnumMemberNameIdx = AddNameToData(NameTable, Member.GetUniqueName());
+		WriteToStream(Data, Member.GetValue());
 		WriteToStream(Data, EnumMemberNameIdx);
 	}
 }
-
 
 std::stringstream MappingGenerator::GenerateFileData()
 {
@@ -361,21 +361,21 @@ std::stringstream MappingGenerator::GenerateFileData()
 	WriteToStream(ReturnBuffer, NameData);
 
 	if constexpr (Settings::Debug::bShouldPrintMappingDebugData)
-		std::cout << std::format("MappingGeneration: NameCounter = 0x{0:X} (Dec: {0})\n", static_cast<uint32>(NameCounter));
+		std::cerr << std::format("MappingGeneration: NameCounter = 0x{0:X} (Dec: {0})\n", static_cast<uint32>(NameCounter));
 
 	/* Write Enum-count and enums */
 	WriteToStream(ReturnBuffer, static_cast<uint32>(NumEnums));
 	WriteToStream(ReturnBuffer, EnumData);
 
 	if constexpr (Settings::Debug::bShouldPrintMappingDebugData)
-		std::cout << std::format("MappingGeneration: NumEnums = 0x{0:X} (Dec: {0})\n", static_cast<uint32>(NumEnums));
+		std::cerr << std::format("MappingGeneration: NumEnums = 0x{0:X} (Dec: {0})\n", static_cast<uint32>(NumEnums));
 
 	/* Write Struct-count and enums */
 	WriteToStream(ReturnBuffer, static_cast<uint32>(NumStructsAndClasse));
 	WriteToStream(ReturnBuffer, StructData);
 
 	if constexpr (Settings::Debug::bShouldPrintMappingDebugData)
-		std::cout << std::format("MappingGeneration: NumStructsAndClasse = 0x{0:X} (Dec: {0})\n\n", static_cast<uint32>(NumStructsAndClasse));
+		std::cerr << std::format("MappingGeneration: NumStructsAndClasse = 0x{0:X} (Dec: {0})\n\n", static_cast<uint32>(NumStructsAndClasse));
 
 	return ReturnBuffer;
 }
@@ -386,10 +386,10 @@ void MappingGenerator::GenerateFileHeader(StreamType& InUsmap, const std::string
 	/* Write 2bytes unsigned */
 	WriteToStream(InUsmap, UsmapFileMagic);
 
-	/* Version: LargeEnums, some games contain enums exceeding 255 values */
-	WriteToStream(InUsmap, EUsmapVersion::LargeEnums);
+	/* Version: ExplicitEnumValues, adds support for enums with explicit values to fix mismatches */
+	WriteToStream(InUsmap, EUsmapVersion::ExplicitEnumValues);
 
-	/* We're on 'LargeEnums' version, we need to write 'bool' (aka int32) bHasVersioning. (NoVersioning = false) -> no [int32 UE4Version, int32 UE5Version] and no [uint32 NetCL] */
+	/* We're on 'ExplicitEnumValues' version, we need to write 'bool' (aka int32) bHasVersioning. (NoVersioning = false) -> no [int32 UE4Version, int32 UE5Version] and no [uint32 NetCL] */
 	WriteToStream(InUsmap, static_cast<int32>(false));
 
 	const uint32 UncompressedSize = static_cast<uint32>(Data.str().length());
@@ -417,8 +417,8 @@ void MappingGenerator::GenerateFileHeader(StreamType& InUsmap, const std::string
 
 	if constexpr (Settings::Debug::bShouldPrintMappingDebugData)
 	{
-		std::cout << std::format("MappingGeneration: CompressedSize = 0x{0:X} (Dec: {0})\n", CompressedSize);
-		std::cout << std::format("MappingGeneration: DecompressedSize = 0x{0:X} (Dec: {0})\n\n", UncompressedSize);
+		std::cerr << std::format("MappingGeneration: CompressedSize = 0x{0:X} (Dec: {0})\n", CompressedSize);
+		std::cerr << std::format("MappingGeneration: DecompressedSize = 0x{0:X} (Dec: {0})\n\n", UncompressedSize);
 	}
 
 	/* Write compressed size */
