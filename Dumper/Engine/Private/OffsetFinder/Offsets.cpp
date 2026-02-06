@@ -276,7 +276,7 @@ void Off::Init()
 	Off::UObject::Outer = OffsetFinder::FindUObjectOuterOffset();
 	std::cerr << std::format("Off::UObject::Outer: 0x{:X}\n", Off::UObject::Outer);
 
-	Off::UObject::Name = OffsetFinder::FindUObjectNameOffset();
+	Off::UObject::Name = 0x20; //OffsetFinder::FindUObjectNameOffset();
 	OverwriteIfInvalidOffset(Off::UObject::Name, (Off::UObject::Class + sizeof(void*))); // Default to right after Class
 	std::cerr << std::format("Off::UObject::Name: 0x{:X}\n\n", Off::UObject::Name);
 
@@ -539,4 +539,5 @@ void PropertySizes::InitTMulticastInlineDelegateSize()
 		return OnPropertyNotFound();
 
 	PropertySizes::MulticastInlineDelegateProperty = OnParticleSpawn.GetSize();
+
 }
